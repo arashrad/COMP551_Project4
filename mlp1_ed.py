@@ -429,10 +429,18 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=5,
     # the resulting gradients will be stored in a list gparams
     gparams_raw = [T.grad(cost, param) for param in classifier.params]
     srng = RandomStreams(seed=234)
-    g_w, g_b = gparams_raw
-    g_w_noisy = srng.normal(g_w.shape, avg=0.0, std=0.28)
-    g_b_noisy = srng.normal(g_b.shape, avg=0.0, std=0.28)
-    gparams = [g_w_noisy, g_b_noisy]
+    noise = [srng.normal(weight.shape, avg=0.0, std=0.28) for weight in gparams_raw]
+    gparams = []
+    for i,v in enumerate(gparams_raw):
+        print(i)
+        gparams.append(v+noise[i])
+
+
+
+    # g_w, g_b = gparams_raw
+    # g_w_noisy = srng.normal(g_w.shape, avg=0.0, std=0.28)
+    # g_b_noisy = srng.normal(g_b.shape, avg=0.0, std=0.28)
+    # gparams = [g_w_noisy, g_b_noisy]
     # specify how to update the parameters of the model as a list of
     # (variable, update expression) pairs
 
@@ -553,9 +561,5 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=5,
 
 
 if __name__ == '__main__':
-    valid_rec, train_rec, test_rec=test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=100, n_hidden=200)
+    valid_rec, train_rec, test_rec=test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10, n_hidden=500)
     records_file_maker("mlp1ed_hl200_lr01_reg0001.csv", train_rec, valid_rec, test_rec)
-    valid_rec, train_rec, test_rec=test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=100, n_hidden=300)
-    records_file_maker("mlp1ed_hl300_lr01_reg0001.csv", train_rec, valid_rec, test_rec)
-    valid_rec, train_rec, test_rec=test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=100, n_hidden=500)
-    records_file_maker("mlp1ed_hl500_lr01_reg0001.csv", train_rec, valid_rec, test_rec)
