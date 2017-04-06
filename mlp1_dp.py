@@ -13,7 +13,6 @@ import theano
 import theano.tensor as T
 import six.moves.cPickle as pickle
 from theano.tensor.shared_randomstreams import RandomStreams
-# from logistic_regression import LogisticRegression
 
 
 def load_data(dataset):
@@ -182,7 +181,6 @@ class HiddenLayer(object):
         self.params = [self.W, self.b]
 
 
-
 class MLP(object):
     """Multi-Layer Perceptron Class """
 
@@ -247,8 +245,7 @@ class MLP(object):
         self.input = input
 
 
-def test_mlp(learning_rate=0.01, L2_reg=0.0001, n_epochs=5,
-             dataset='mnist.pkl.gz', batch_size=20, n_hidden=500):
+def test_mlp(learning_rate=0.01, L2_reg=0.0001, n_epochs=5, dataset='mnist.pkl.gz', batch_size=50, n_hidden=300, std=0.1):
     """
     Demonstrate stochastic gradient descent optimization for a multilayer
     perceptron
@@ -287,16 +284,13 @@ def test_mlp(learning_rate=0.01, L2_reg=0.0001, n_epochs=5,
     n_valid_batches = valid_set_x.get_value(borrow=True).shape[0] // batch_size
     n_test_batches = test_set_x.get_value(borrow=True).shape[0] // batch_size
 
-    ######################
-    # BUILD ACTUAL MODEL #
-    ######################
+
     print('... building the model')
 
     # allocate symbolic variables for the data
     index = T.lscalar()  # index to a [mini]batch
     x = T.matrix('x')  # the data is presented as rasterized images
-    y = T.ivector('y')  # the labels are presented as 1D vector of
-                        # [int] labels
+    y = T.ivector('y')  # the labels are presented as 1D vector of [int] labels
 
     rng = numpy.random.RandomState(1234)
 
@@ -317,7 +311,6 @@ def test_mlp(learning_rate=0.01, L2_reg=0.0001, n_epochs=5,
         classifier.negative_log_likelihood(y)
         + L2_reg * classifier.L2_sqr
     )
-    # end-snippet-4
 
     # compiling a Theano function that computes the mistakes that are made
     # by the model on a minibatch
@@ -352,31 +345,15 @@ def test_mlp(learning_rate=0.01, L2_reg=0.0001, n_epochs=5,
     # start-snippet-5
     # compute the gradient of cost with respect to theta (sorted in params)
     # the resulting gradients will be stored in a list gparams
-    gparams_raw = [T.grad(cost, param) for param in classifier.params]
+    gradient_params_raw = [T.grad(cost, param) for param in classifier.params]
+
+    print("... adding noise" )
+
     srng = RandomStreams(seed=234)
-    noise = [srng.normal(weight.shape, avg=0.0, std=0.28) for weight in gparams_raw]
-    gparams = []
-    for i,v in enumerate(gparams_raw):
-        print(i)
-        gparams.append(v+noise[i])
+    noise = [srng.normal(weight.shape, avg=0.0, std=std) for weight in gradient_params_raw]
+    gparams = [g+n for g, n in zip(gradient_params_raw, noise)]
 
-
-
-    # g_w, g_b = gparams_raw
-    # g_w_noisy = srng.normal(g_w.shape, avg=0.0, std=0.28)
-    # g_b_noisy = srng.normal(g_b.shape, avg=0.0, std=0.28)
-    # gparams = [g_w_noisy, g_b_noisy]
-    # specify how to update the parameters of the model as a list of
-    # (variable, update expression) pairs
-
-    # given two lists of the same length, A = [a1, a2, a3, a4] and
-    # B = [b1, b2, b3, b4], zip generates a list C of same size, where each
-    # element is a pair formed from the two lists :
-    #    C = [(a1, b1), (a2, b2), (a3, b3), (a4, b4)]
-    updates = [
-        (param, param - learning_rate * gparam)
-        for param, gparam in zip(classifier.params, gparams)
-    ]
+    updates = [(param, param - learning_rate * gparam) for param, gparam in zip(classifier.params, gparams)]
 
     # compiling a Theano function `train_model` that returns the cost, but
     # in the same time updates the parameter of the model based on the rules
@@ -390,17 +367,12 @@ def test_mlp(learning_rate=0.01, L2_reg=0.0001, n_epochs=5,
             y: train_set_y[index * batch_size: (index + 1) * batch_size]
         }
     )
-    # end-snippet-5
 
-    ###############
-    # TRAIN MODEL #
-    ###############
     print('... training')
 
     # early-stopping parameters
     patience = 10000  # look as this many examples regardless
-    patience_increase = 2  # wait this much longer when a new best is
-                           # found
+    patience_increase = 2  # wait this much longer when a new best is found
     improvement_threshold = 0.995  # a relative improvement of this much is
                                    # considered significant
     validation_frequency = min(n_train_batches, patience // 2)
@@ -417,10 +389,10 @@ def test_mlp(learning_rate=0.01, L2_reg=0.0001, n_epochs=5,
     epoch = 0
     done_looping = False
 
-
+    # lists to record the results
     validation_records = []
     training_records = []
-    test_records = []
+
     while (epoch < n_epochs) and (not done_looping):
         epoch = epoch + 1
         for minibatch_index in range(n_train_batches):
@@ -486,5 +458,11 @@ def test_mlp(learning_rate=0.01, L2_reg=0.0001, n_epochs=5,
 
 
 if __name__ == '__main__':
-    valid_rec, train_rec, test_rec=test_mlp(learning_rate=0.01, L2_reg=0.0001, n_epochs=10, n_hidden=500)
-    records_file_maker("mlp1ed_hl200_lr01_reg0001.csv", train_rec, valid_rec, test_rec)
+    valid_rec, train_rec, test_rec=test_mlp(learning_rate=0.01, std=0.5, n_epochs=100, n_hidden=500, batch_size=100)
+    records_file_maker("mlp1_dp_hl500_bs100_std05.csv", train_rec, valid_rec, test_rec)
+    valid_rec, train_rec, test_rec=test_mlp(learning_rate=0.01, std=0.05, n_epochs=100, n_hidden=500, batch_size=100)
+    records_file_maker("mlp1_dp_hl500_bs100_std005.csv", train_rec, valid_rec, test_rec)
+    valid_rec, train_rec, test_rec=test_mlp(learning_rate=0.01, std=5.0, n_epochs=100, n_hidden=500, batch_size=100)
+    records_file_maker("mlp1_dp_hl500_bs100_std5.csv", train_rec, valid_rec, test_rec)
+    valid_rec, train_rec, test_rec=test_mlp(learning_rate=0.01, std=1.0, n_epochs=100, n_hidden=500, batch_size=100)
+    records_file_maker("mlp1_dp_hl500_bs100_std1.csv", train_rec, valid_rec, test_rec)
