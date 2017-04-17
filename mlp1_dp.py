@@ -317,7 +317,6 @@ def test_mlp(learning_rate=0.01, L2_reg=0.0001, n_epochs=5, dataset='mnist.pkl.g
         }
     )
 
-
     gradient_params_raw = [T.grad(cost, param) for param in classifier.params]
 
     print("... adding noise" )
