@@ -252,26 +252,6 @@ def test_mlp(learning_rate=0.01, L2_reg=0.0001, n_epochs=5, dataset='mnist.pkl.g
 
     This is demonstrated on MNIST.
 
-    :type learning_rate: float
-    :param learning_rate: learning rate used (factor for the stochastic
-    gradient
-
-    :type L1_reg: float
-    :param L1_reg: L1-norm's weight when added to the cost (see
-    regularization)
-
-    :type L2_reg: float
-    :param L2_reg: L2-norm's weight when added to the cost (see
-    regularization)
-
-    :type n_epochs: int
-    :param n_epochs: maximal number of epochs to run the optimizer
-
-    :type dataset: string
-    :param dataset: the path of the MNIST dataset file from
-                 http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz
-
-
    """
     datasets = load_data(dataset)
 
@@ -303,17 +283,12 @@ def test_mlp(learning_rate=0.01, L2_reg=0.0001, n_epochs=5, dataset='mnist.pkl.g
         n_out=10
     )
 
-    # start-snippet-4
-    # the cost we minimize during training is the negative log likelihood of
-    # the model plus the regularization terms (L1 and L2); cost is expressed
-    # here symbolically
     cost = (
         classifier.negative_log_likelihood(y)
         + L2_reg * classifier.L2_sqr
     )
 
-    # compiling a Theano function that computes the mistakes that are made
-    # by the model on a minibatch
+
     test_model = theano.function(
         inputs=[index],
         outputs=classifier.errors(y),
@@ -342,9 +317,7 @@ def test_mlp(learning_rate=0.01, L2_reg=0.0001, n_epochs=5, dataset='mnist.pkl.g
         }
     )
 
-    # start-snippet-5
-    # compute the gradient of cost with respect to theta (sorted in params)
-    # the resulting gradients will be stored in a list gparams
+
     gradient_params_raw = [T.grad(cost, param) for param in classifier.params]
 
     print("... adding noise" )
@@ -355,9 +328,6 @@ def test_mlp(learning_rate=0.01, L2_reg=0.0001, n_epochs=5, dataset='mnist.pkl.g
 
     updates = [(param, param - learning_rate * gparam) for param, gparam in zip(classifier.params, gparams)]
 
-    # compiling a Theano function `train_model` that returns the cost, but
-    # in the same time updates the parameter of the model based on the rules
-    # defined in `updates`
     train_model = theano.function(
         inputs=[index],
         outputs=cost,
@@ -458,11 +428,11 @@ def test_mlp(learning_rate=0.01, L2_reg=0.0001, n_epochs=5, dataset='mnist.pkl.g
 
 
 if __name__ == '__main__':
-    valid_rec, train_rec, test_rec=test_mlp(learning_rate=0.01, std=0.5, n_epochs=100, n_hidden=500, batch_size=100)
-    records_file_maker("mlp1_dp_hl500_bs100_std05.csv", train_rec, valid_rec, test_rec)
-    valid_rec, train_rec, test_rec=test_mlp(learning_rate=0.01, std=0.05, n_epochs=100, n_hidden=500, batch_size=100)
-    records_file_maker("mlp1_dp_hl500_bs100_std005.csv", train_rec, valid_rec, test_rec)
-    valid_rec, train_rec, test_rec=test_mlp(learning_rate=0.01, std=5.0, n_epochs=100, n_hidden=500, batch_size=100)
-    records_file_maker("mlp1_dp_hl500_bs100_std5.csv", train_rec, valid_rec, test_rec)
-    valid_rec, train_rec, test_rec=test_mlp(learning_rate=0.01, std=1.0, n_epochs=100, n_hidden=500, batch_size=100)
-    records_file_maker("mlp1_dp_hl500_bs100_std1.csv", train_rec, valid_rec, test_rec)
+    valid_rec, train_rec, test_rec=test_mlp(learning_rate=0.01, std=3.77, n_epochs=100, n_hidden=500, batch_size=100)
+    records_file_maker("mlp1dp_lr01_bs100_std377.csv", train_rec, valid_rec, test_rec)
+    valid_rec, train_rec, test_rec=test_mlp(learning_rate=0.01, std=0.37, n_epochs=100, n_hidden=500, batch_size=100)
+    records_file_maker("mlp1dp_lr01_bs100_std037.csv", train_rec, valid_rec, test_rec)
+    valid_rec, train_rec, test_rec=test_mlp(learning_rate=0.01, std=0.037, n_epochs=100, n_hidden=500, batch_size=100)
+    records_file_maker("mlp1dp_lr01_bs100_std0037.csv", train_rec, valid_rec, test_rec)
+
+
