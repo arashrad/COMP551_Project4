@@ -14,5 +14,8 @@ The code for implementing MLP is taken from Theano's tutorial page
 - We add different level of Gaussian to Gradient values
 - keep a copy of "mnist.pkl.gz" file in your code directory
 
+******************************************************************
+Use "plotter.py" to plot your final results
+
 
 
