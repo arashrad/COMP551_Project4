@@ -317,13 +317,17 @@ def test_mlp(learning_rate=0.01, L2_reg=0.0001, n_epochs=5, dataset='mnist.pkl.g
         }
     )
 
+    # calculating symbolic gradient
     gradient_params_raw = [T.grad(cost, param) for param in classifier.params]
+
+    # clipping the gradient values
+    gradient_clipped = [T.clip(gr, -2, 2) for gr in gradient_params_raw]
 
     print("... adding noise" )
 
     srng = RandomStreams(seed=234)
-    noise = [srng.normal(weight.shape, avg=0.0, std=std) for weight in gradient_params_raw]
-    gparams = [g+n for g, n in zip(gradient_params_raw, noise)]
+    noise = [srng.normal(weight.shape, avg=0.0, std=std) for weight in gradient_clipped]
+    gparams = [g+n for g, n in zip(gradient_clipped, noise)]
 
     updates = [(param, param - learning_rate * gparam) for param, gparam in zip(classifier.params, gparams)]
 
